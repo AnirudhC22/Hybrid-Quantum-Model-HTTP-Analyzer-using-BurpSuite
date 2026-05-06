@@ -1,0 +1,14 @@
+graph TD
+    Req[Incoming JSON Request] --> FeatExt[Advanced Feature Extraction]
+    FeatExt --> Anomaly[Isolation Forest Anomaly Gate]
+    FeatExt --> Classical[Classical Ensemble RF/XGB]
+    
+    Classical -- "Confidence >= 85%" --> Verdict[Final Verdict Output]
+    Classical -- "Confidence < 85%" --> QML[PennyLane VQC Escalation]
+    
+    QML --> Weighting[Confidence Weighted Average]
+    Weighting --> Verdict
+    
+    style Req fill:#f9f,stroke:#333,stroke-width:2px
+    style QML fill:#bbf,stroke:#333,stroke-width:4px
+    style Classical fill:#dfd,stroke:#333,stroke-width:2px

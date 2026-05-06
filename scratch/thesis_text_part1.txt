@@ -1,0 +1,141 @@
+﻿python : Traceback (most recent call last):
+At line:1 char:1
++ python -c "
++ ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "<string>", line 9, in <module>
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 233-234: character maps to <undefined>
+Total pages: 58
+
+===== PAGE 1 =====
+TABLE OF CONTENTS
+Executive Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ii
+List of Tables . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . iv
+List of Figures . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . vi
+List of Abbreviations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . vii
+List of Symbols . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . viii
+1 INTRODUCTION 1
+1.1 Background . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1
+1.2 Motivation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.3 Scope and Objectives . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.4 Challenges Encountered . . . . . . . . . . . . . . . . . . . . . . . . . 4
+1.5 Document Organization . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+2 PROJECT DESCRIPTION AND GOALS 6
+2.1 Project Overview . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+2.2 What ôHybridö Means in Practice . . . . . . . . . . . . . . . . . . . . 6
+2.3 Project Goals . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+2.4 Why a Synthetic Dataset . . . . . . . . . . . . . . . . . . . . . . . . . 8
+2.5 Challenges and Design Trade-offs . . . . . . . . . . . . . . . . . . . . 9
+3 TECHNICAL SPECIFICATION 10
+3.1 Software Stack Overview . . . . . . . . . . . . . . . . . . . . . . . . . 10
+3.2 Feature Extraction Layer . . . . . . . . . . . . . . . . . . . . . . . . . 10
+3.3 Classical ML Stack (scikit-learn) . . . . . . . . . . . . . . . . . . . . . 10
+3.3.1 Anomaly Detection . . . . . . . . . . . . . . . . . . . . . . . . 10
+3.3.2 Attack Classifier . . . . . . . . . . . . . . . . . . . . . . . . . 12
+3.4 PennyLane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+3.4.1 Circuit Specification . . . . . . . . . . . . . . . . . . . . . . . 13
+3.5 Flask Deployment Stack . . . . . . . . . . . . . . . . . . . . . . . . . 13
+3.6 Attack Categories Covered . . . . . . . . . . . . . . . . . . . . . . . . 14
+
+===== PAGE 2 =====
+3.6.1 Handling Class Imbalance . . . . . . . . . . . . . . . . . . . . 14
+4 SYSTEM DESIGN 15
+4.1 Design Philosophy . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+4.2 Stage 1: Feature Extraction . . . . . . . . . . . . . . . . . . . . . . . . 16
+4.3 Stage 2: Anomaly Detection . . . . . . . . . . . . . . . . . . . . . . . 16
+4.4 Stage 3: Classical Classification . . . . . . . . . . . . . . . . . . . . . 17
+4.4.1 Ensemble Architecture . . . . . . . . . . . . . . . . . . . . . . 17
+4.4.2 Confidence Gate . . . . . . . . . . . . . . . . . . . . . . . . . 17
+4.5 Stage 4: Variational Quantum Circuit . . . . . . . . . . . . . . . . . . . 17
+4.5.1 Pre-processing for the VQC . . . . . . . . . . . . . . . . . . . 18
+4.5.2 State Preparation . . . . . . . . . . . . . . . . . . . . . . . . . 18
+4.5.3 Variational Layers . . . . . . . . . . . . . . . . . . . . . . . . 18
+4.5.4 Measurement . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+4.6 Stage 5: Ensemble Decision . . . . . . . . . . . . . . . . . . . . . . . 19
+4.7 Handling Batch Dimension . . . . . . . . . . . . . . . . . . . . . . . . 19
+5 METHODOLOGY AND TESTING 21
+5.1 Training Procedure . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+5.1.1 Classical Model Training . . . . . . . . . . . . . . . . . . . . . 21
+5.1.2 Quantum Model Training . . . . . . . . . . . . . . . . . . . . . 21
+5.1.3 Loss Function . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+5.1.4 Optimizer and Hyperparameters . . . . . . . . . . . . . . . . . 22
+5.2 Validation Strategy . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.3 Quantum-Specific Challenges . . . . . . . . . . . . . . . . . . . . . . 23
+5.3.1 The Barren Plateau Problem . . . . . . . . . . . . . . . . . . . 23
+5.3.2 Gradient Cost . . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+5.4 Testing Methodology . . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+6 PROJECT IMPLEMENTATION 26
+6.1 Codebase Structure . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+6.2 Feature Extractor . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+6.3 Detection Engine . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+6.4 REST API Server . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29
+
+===== PAGE 3 =====
+6.5 Web Dashboard . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30
+6.6 Burp Suite Integration . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+6.7 Implementation Challenges . . . . . . . . . . . . . . . . . . . . . . . . 33
+7 RESULTS AND DISCUSSION 34
+7.1 Experimental Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+7.2 Classification Performance . . . . . . . . . . . . . . . . . . . . . . . . 34
+7.2.1 Overall Accuracy . . . . . . . . . . . . . . . . . . . . . . . . . 34
+7.2.2 Confusion Matrix Analysis . . . . . . . . . . . . . . . . . . . . 35
+7.2.3 ROC Curve Analysis . . . . . . . . . . . . . . . . . . . . . . . 35
+7.3 Precision-Recall Analysis . . . . . . . . . . . . . . . . . . . . . . . . . 36
+7.4 Comparative Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . 37
+7.4.1 Where the Classical Ensemble Struggles . . . . . . . . . . . . . 37
+7.4.2 Per-Category Breakdown . . . . . . . . . . . . . . . . . . . . . 37
+7.5 Confidence Distribution . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+7.6 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+8 CONCLUSION AND FURTHER ENHANCEMENTS 41
+8.1 Summary of Contributions . . . . . . . . . . . . . . . . . . . . . . . . 41
+8.2 What We Learned . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42
+8.3 Future Work . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42
+8.3.1 Running on Actual Quantum Hardware . . . . . . . . . . . . . 42
+8.3.2 Evaluation on Real Traffic Datasets . . . . . . . . . . . . . . . 43
+8.3.3 Expanding Circuit Depth Through Better Training . . . . . . . 43
+8.3.4 Streaming and Scalability . . . . . . . . . . . . . . . . . . . . 44
+8.4 Closing Thoughts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44
+Bibliography 45
+Appendix A: Source Code 46
+Appendix B: Publications 48
+i
+
+===== PAGE 4 =====
+EXECUTIVE SUMMARY
+Web applications are perennial targets. Each day sees financial transactions, passwords,
+and sensitive information subjected to tests using crafted HTTP requests designed to in-
+ject SQL commands, execute scripts, traverse directories, or run arbitrary commands.
+Classical machine learning techniques such as Random Forests and ensemble methods
+have been used successfully, but they reach a ceiling when attack payloads are obfus-
+cated, split across parameters, or URL-encoded in ways that obscure keyword signals.
+In order to overcome such challenges, this research proposes a Hybrid Quantum-
+Classical Web Attack Detection System that integrates Variational Quantum Circuits
+(VQCs) as an escalation layer within a four-stage detection pipeline. The concept is not
+to replace conventional machine learning but to leverage quantum computing in the one
+stage where it provides a clear benefit: resolving ambiguous, low-confidence samples
+that the classical ensemble cannot classify with certainty.
+The system operates in four stages. First, every HTTP request is converted into
+a 30-dimensional numerical feature vector by a domain-agnostic feature extractor that
+computes lengths, Shannon entropy, keyword hit counts, special character densities,
+and URL-encoding indicators. Second, an unsupervised anomaly detectorùcombining
+Isolation Forest and One-Class SVM trained on benign traffic onlyùflags zero-day-
+like anomalies before they reach the classifier. Third, a soft-voting classical ensemble
+of Random Forest, XGBoost, and SVM classifies the request into one of five categories
+(normal, SQLi, XSS, CMDi, traversal). Fourth, when the ensembleÆs confidence falls
+below 85%, a Variational Quantum Classifier (VQC) operating on four qubits and three
+variational layers is invoked as a second opinion; its verdict is weighted-averaged with
+the classical output for the final decision.
+The dataset used for training is a synthetically generated collection of HTTP re-
+quests produced by the projectÆs owndataset generator.py. This generator creates
+realistic normal traffic across 25 hosts and 40 URL paths, and generates labelled attack
+samples for all four attack categories using real-world payload patterns. Training uses
+an 80%/20% stratified split, with the classical ensemble fitted on the full training set
+and the VQC trained on a random subsample of 150 samples per binary classifier.
+ii
+
+===== PAGE 5 =====

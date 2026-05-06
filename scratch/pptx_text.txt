@@ -1,0 +1,235 @@
+Total slides: 20
+
+======================================================================
+SLIDE 1
+======================================================================
+[Layout: Title Slide]
+  **INTELLIGENT WEB REQUEST ATTACK**
+  **DETECTION USING MACHINE LEARNING AND**
+  **BURP SUITE INTEGRATION**
+  **Prof. EZHIL ARASI V**
+  Jayant Sharma	            Reg. No. 22BCE3559
+  C. Anirudh                         Reg. No.22BCE0964
+  Anamika Bharti               Reg. No. 22BCB0129
+  **Date of Presentation:**
+  **30/04/26**
+  **Final Review**
+  **School:-SCOPE**
+
+======================================================================
+SLIDE 2
+======================================================================
+[Layout: Title and Content]
+  **SYNOPSIS**
+  **Executive Summary**
+  **The Challenge**
+  Modern web threats have evolved beyond the reach of traditional defenses. Attackers now employ sophisticated obfuscation, multi-vector injections, and polymorphic payloads that easily slip through the "static gates" of standard Web Application Firewalls (WAFs) and signature-based systems.
+  **The Innovation**
+  **This research introduces a pioneering Hybrid Quantum-Classical Framework that redefines web traffic analysis. By integrating the industry-standard Burp Suite with a dual-layered intelligence engine, we leverage:**
+  **Classical Ensemble Intelligence: To provide rapid, high-throughput filtering of known attack patterns.**
+  **Quantum Variational Classifiers (VQC): To process complex, high-dimensional feature spaces, identifying subtle malicious anomalies that classical logic often fails to resolve.**
+  **The Impact**
+  Our hybrid approach achieves superior detection accuracy and a significant reduction in false positives. By bridging the gap between current computational limits and quantum potential, this framework provides a robust, future-proof shield for web applications against the next generation of cyber exploits.
+  2
+
+======================================================================
+SLIDE 3
+======================================================================
+[Layout: Title and Content]
+  **INTRODUCTION**
+  **Problem Statement**
+  **Obfuscation Tactics: Attackers use payload encoding and syntactic alterations to "camouflage" malicious intent.**
+  **Signature Limitations: Traditional Intrusion Detection Systems (IDS) rely on known patterns; they are blind to novel or mutated threats.**
+  **The Gap: There is a critical need for high-dimensional feature analysis that classical hardware struggles to process efficiently at scale.**
+  **Current State**
+  **Standard Tools: Burp Suite is the industry standard for intercepting HTTP traffic, yet its manual analysis is time-consuming.**
+  **Classical ML: Models like Random Forest or SVM are effective but can hit a performance ceiling with highly complex, non-linear attack patterns.**
+  **The Quantum Advantage: Quantum computing offers exponentially larger state spaces (Hilbert space), making it highly effective at finding hidden correlations in complex security data.**
+  3
+
+======================================================================
+SLIDE 4
+======================================================================
+[Layout: Title and Content]
+  OVERALL EXPLANATION
+  **STEP 1: Data Entry**
+  If (HTTP Request Intercepted) -> Then (Vectorize via TF-IDF & Extract 26 Features);
+  **STEP 2: Anomaly Filtering**
+  If (Isolation Forest == Anomaly) → Then (Proceed to Classification); Else → (Discard as Routine Traffic);
+  **STEP 3: Classical Evaluation**
+  Run (Random Forest + XGBoost Ensemble);
+  **STEP 4: The Confidence Gate**
+  **If (Classical Confidence > 0.85) → Then (Output Final Verdict Immediately); Else → (ESCALATE to Quantum Layer);**
+  **STEP 5: Quantum Resolution**
+  If (Entanglement Analysis == Malicious) → Then (Flag as Obfuscated Attack); Else → (Classify as Benign);
+  **STEP 6: System Output**
+  Print (Result to Web Dashboard) AND Log (to Burp Suite Extension);
+  4
+
+======================================================================
+SLIDE 5
+======================================================================
+[Layout: Title and Content]
+  OVERALL EXPLANATION
+  5
+
+======================================================================
+SLIDE 6
+======================================================================
+[Layout: Title and Content]
+  OVERALL EXPLANATION
+  6
+  Real-time HTTP request processing
+  Multi-stage detection pipeline
+  Integration with Burp Suite
+
+======================================================================
+SLIDE 7
+======================================================================
+[Layout: Title and Content]
+  **DATASET DESCRIPTION**
+  **Data Source: Web request data captured, generated, and labeled using Burp Suite.**
+  **Data Types: Includes normal benign traffic and malicious payloads (SQL Injection, Cross-Site Scripting, Command Injection, etc.).**
+  **Feature Engineering: Extracted a 26-dimensional feature vector from HTTP requests.**
+  **Feature Examples: Payload length, special character frequency, entropy, and structural header anomalies.**
+  **Preprocessing: Data normalization and PCA (Principal Component Analysis) to prepare data for quantum embedding.**
+  **Dataset Composition: 425,000 HTTP requests with a 75/25 normal-to-malicious split.**
+  **Attack Types: SQL Injection (26.7%), XSS (22.7%), Path Traversal (13.0%), CMDi (15.0%), and others.**
+  **Burp Suite Integration: Describe how "Fake Gate" tool intercepts malicious links and sends them to the classification pipeline in real-time.**
+  7
+  .
+
+======================================================================
+SLIDE 8
+======================================================================
+[Layout: Title and Content]
+  IMPLEMENTATION TOOLS AND SOFTWARE
+  **Traffic Capture & Testing: Burp Suite (Intercepting proxy, traffic generation).**
+  **Classical Machine Learning: Python, Scikit-Learn (Isolation Forest, SVM, Random Forest/Ensembles).**
+  **Quantum Machine Learning: Qiskit / PennyLane (For simulating the Variational Quantum Circuit).**
+  **Data Processing: Pandas, NumPy, PCA.**
+  **Model Explainability: SHAP (SHapley Additive exPlanations) and Matplotlib for visual output.**
+  8
+
+======================================================================
+SLIDE 9
+======================================================================
+[Layout: Title and Content]
+  **OUTPUT**
+  **Detection Metrics: Achieved high Precision, Recall, and F1-Score compared to purely classical baselines.**
+  **Zero-Day Detection: The quantum layer successfully identified novel attacks that classical models missed due to low confidence.**
+  **Efficiency: The hybrid nature ensures fast processing—only the most complex, ambiguous requests trigger the computationally heavy quantum circuit.**
+  **Explainability: SHAP plots confirm that the model bases its decisions on valid threat indicators rather than background noise.**
+  9
+
+======================================================================
+SLIDE 10
+======================================================================
+[Layout: Title and Content]
+  **OUTPUT**
+  10
+
+======================================================================
+SLIDE 11
+======================================================================
+[Layout: Title and Content]
+  **OUTPUT**
+  11
+
+======================================================================
+SLIDE 12
+======================================================================
+[Layout: Title and Content]
+  **OUTPUT**
+  12
+  Significant increase in overall pass rate (75% → 97.5%)
+  Normal traffic accuracy improved drastically (14.3% → 95.2%)
+  False positive rate reduced sharply (85.7% → 4.8%)
+  Higher confidence in predictions (77.7% → 90.9%)
+
+======================================================================
+SLIDE 13
+======================================================================
+[Layout: Title and Content]
+  **Detailed Improvement Analysis**
+  13
+
+======================================================================
+SLIDE 14
+======================================================================
+[Layout: Title and Content]
+  **Detection Capability**
+  14
+  Better detection across all attack types
+  Strong improvement in edge cases
+  High evasion resistance
+  Our model performs consistently across all attack categories
+
+======================================================================
+SLIDE 15
+======================================================================
+[Layout: Title and Content]
+  **Dashboard Output**
+  15
+
+======================================================================
+SLIDE 16
+======================================================================
+[Layout: Title and Content]
+  **CONCLUSION**
+  **Superior Detection Performance: The Hybrid QML model achieved a benchmark-breaking 98.7% Accuracy and 0.99 ROC AUC, significantly outperforming classical Random Forest (94.2%) and DNN (95.8%) models.**
+  **The "Entanglement" Advantage: Our research proves that quantum entanglement gates successfully capture cross-feature correlations in "split-payload" attacks (e.g., SQL keywords spread across multiple parameters) that classical TF-IDF vectorization fails to link.**
+  **Robustness Against Obfuscation: The hybrid architecture demonstrated unique resilience to multi-layered encoding (Double/Triple URL encoding), where classical models were easily confused by the altered feature profiles.**
+  **Operational Real-Time Integration: Beyond theory, we developed a functional ecosystem including a REST API, a Web Dashboard, and a Burp Suite Extension maintaining a low inference latency of 15–30ms per request.**
+  **Maximum Precision via Hybrid Escalation: By utilizing a two-stage approach, the system achieved a 100% final success rate in the hybrid stage, ensuring that even "near-benign" malicious traffic is flagged with high confidence.**
+  16
+
+======================================================================
+SLIDE 17
+======================================================================
+[Layout: Two Content]
+  17
+
+======================================================================
+SLIDE 18
+======================================================================
+[Layout: Title and Content]
+  **FUTURE ENHANCEMENT**
+  **Real-World Quantum Hardware: Transitioning from simulators to IBM Quantum (NISQ) processors using noise-aware training to mitigate decoherence and gate errors.**
+  **Barren Plateau Mitigation: Deepening the architecture to 8–16 layers via layer-wise training and problem-aware initialization for superior feature mapping.**
+  **Modern Attack Benchmarking: Expanding beyond CSIC 2010 to modern datasets (CIC-IDS) to detect GraphQL, SSTI, and Deserialization vulnerabilities.**
+  **Enterprise Scalability: Scaling the system for production via Apache Kafka streaming and process-level parallelism to maintain <30ms latency under heavy loads.**
+  18
+
+======================================================================
+SLIDE 19
+======================================================================
+[Layout: Title and Content]
+  OUTCOME
+  19
+  **Interactive Web Dashboard: A centralized interface providing a Live Detection Log and a Manual Test Panel for security personnel to monitor traffic and audit decisions.**
+  **Functional Burp Suite Integration: A specialized Jython-based extension that intercepts live HTTP/S traffic and passes it through the hybrid detection pipeline in real-time.**
+  **Operational REST API: A modular detection system featuring a RESTful interface, allowing it to be easily integrated into existing enterprise security stacks or proxy deployments.**
+  **Six-Stage Processing Pipeline: A fully implemented modular architecture—from unsupervised Anomaly Gates to Variational Quantum Classifiers—capable of being substituted or scaled without impacting the entire system.**
+  **Proven Mitigation of Barren Plateaus: Practical documentation and code implementation for overcoming quantum optimization hurdles like batch dimension management and thread-safe quantum simulator usage.**
+
+======================================================================
+SLIDE 20
+======================================================================
+[Layout: Title and Content]
+  **Quantum Machine Learning Frameworks**
+  **PennyLane (The Core Framework)**
+  **IEEE: V. Bergholm et al., "PennyLane: Automatic differentiation of hybrid quantum-classical computations," arXiv preprint arXiv:1811.04968, 2018.**
+  **APA: Bergholm, V., Izaac, J., Schuld, M., Gogolin, C., Blank, C., McKiernan, K., & Killoran, N. (2018). PennyLane: Automatic differentiation of hybrid quantum-classical computations. arXiv preprint arXiv:1811.04968.**
+  **Qiskit (IBM Quantum Integration)**
+  **IEEE: Qiskit contributors, "Qiskit: An Open-source Framework for Quantum Computing," 2023.**
+  **APA: Qiskit contributors. (2023). Qiskit: An Open-source Framework for Quantum Computing. doi: 10.5281/zenodo.2562110**
+  **Web Security & Traffic Interception**
+  **PortSwigger Burp Suite (The Interception Tool)**
+  **IEEE: PortSwigger, "Burp Suite Professional / Community Edition," 2024.**
+  **APA: PortSwigger. (2024). Burp Suite Professional / Community Edition [Software].**
+  **Web Security Research (Contextual Reference)**
+  **IEEE: J. Kettle, "Web Security Academy: Research and Documentation," PortSwigger Research, 2024.**
+  **APA: Kettle, J. (2024). Web Security Academy: Research and Documentation. PortSwigger**
+  REFERENCES
+  20

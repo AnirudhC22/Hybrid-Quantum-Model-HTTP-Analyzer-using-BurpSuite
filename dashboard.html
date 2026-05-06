@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Attack Detector — Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  /* Header */
+  .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 18px; font-weight: 600; color: #fff; letter-spacing: 0.3px; }
+  .header h1 span { color: #7c6fe0; }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #48bb78; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .status-label { font-size: 13px; color: #a0aec0; }
+
+  /* Layout */
+  .main { padding: 24px 28px; }
+
+  /* Stat cards */
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .card { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px 20px; }
+  .card .val { font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .card .lbl { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card.total .val  { color: #63b3ed; }
+  .card.attacks .val { color: #fc8181; }
+  .card.clean .val  { color: #68d391; }
+  .card.rate .val   { color: #f6ad55; }
+
+  /* Attack type pills */
+  .type-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .pill { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .pill-sqli      { background: #3d1515; color: #fc8181; border: 1px solid #fc818144; }
+  .pill-xss       { background: #3d2b00; color: #f6ad55; border: 1px solid #f6ad5544; }
+  .pill-cmdi      { background: #2d1a3d; color: #b794f4; border: 1px solid #b794f444; }
+  .pill-traversal { background: #1a2d3d; color: #63b3ed; border: 1px solid #63b3ed44; }
+  .pill-normal    { background: #1a3d2b; color: #68d391; border: 1px solid #68d39144; }
+  .pill-suspicious{ background: #3d3400; color: #ecc94b; border: 1px solid #ecc94b44; }
+
+  /* Two-column layout */
+  .cols { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+
+  /* Panel */
+  .panel { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 10px; overflow: hidden; }
+  .panel-head { padding: 12px 18px; border-bottom: 1px solid #2d3748; display: flex; align-items: center; justify-content: space-between; }
+  .panel-head h2 { font-size: 13px; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .panel-body { padding: 0; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { padding: 9px 14px; text-align: left; font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2d3748; background: #161827; }
+  .tbl td { padding: 9px 14px; border-bottom: 1px solid #1e2235; vertical-align: middle; max-width: 0; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: #1e2235; cursor: pointer; }
+  .tbl tr.selected td { background: #232640; }
+  .url-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; color: #a0b4c8; font-family: monospace; font-size: 12px; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-sqli      { background: #3d1515; color: #fc8181; }
+  .badge-xss       { background: #3d2b00; color: #f6ad55; }
+  .badge-cmdi      { background: #2d1a3d; color: #b794f4; }
+  .badge-traversal { background: #1a2d3d; color: #63b3ed; }
+  .badge-normal    { background: #1a3d2b; color: #68d391; }
+  .badge-suspicious{ background: #3d3400; color: #ecc94b; }
+  .badge-error     { background: #2d2d2d; color: #718096; }
+
+  /* Confidence bar */
+  .conf-wrap { display: flex; align-items: center; gap: 6px; }
+  .conf-bar  { flex: 1; height: 5px; background: #2d3748; border-radius: 3px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .conf-txt  { font-size: 11px; color: #718096; width: 38px; text-align: right; }
+
+  /* Detail panel */
+  .detail-empty { padding: 40px 20px; text-align: center; color: #4a5568; font-size: 13px; }
+  .detail-content { padding: 16px 18px; }
+  .detail-row { margin-bottom: 12px; }
+  .detail-row .key { font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .detail-row .val { font-size: 13px; color: #e2e8f0; word-break: break-all; }
+  .detail-row .val.mono { font-family: monospace; font-size: 12px; color: #a0b4c8; }
+  .detail-verdict { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+  .detail-verdict .vtype { font-size: 20px; font-weight: 700; }
+  .detail-verdict .vconf { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+
+  /* Manual test panel */
+  .test-form { padding: 16px 18px; }
+  .test-form label { font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 4px; margin-top: 12px; }
+  .test-form label:first-child { margin-top: 0; }
+  .test-form input, .test-form select, .test-form textarea {
+    width: 100%; background: #0f1117; border: 1px solid #2d3748; color: #e2e8f0;
+    border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: monospace;
+  }
+  .test-form input:focus, .test-form textarea:focus { outline: none; border-color: #7c6fe0; }
+  .test-form textarea { resize: vertical; min-height: 60px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 9px; border: none;
+    border-radius: 7px; background: #7c6fe0; color: #fff; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn:hover { background: #6b5fd0; }
+  .btn:active { background: #5a4fc0; }
+  .test-result { margin-top: 12px; padding: 10px 12px; border-radius: 7px;
+    background: #0f1117; border: 1px solid #2d3748; font-size: 12px;
+    font-family: monospace; color: #a0b4c8; white-space: pre-wrap; display: none; }
+
+  /* Auto-refresh toggle */
+  .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #718096; }
+  .toggle { position: relative; width: 34px; height: 18px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #2d3748; border-radius: 9px; transition: .3s; cursor: pointer; }
+  .slider:before { position: absolute; content: ""; width: 12px; height: 12px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; }
+  input:checked + .slider { background: #7c6fe0; }
+  input:checked + .slider:before { transform: translateX(16px); }
+
+  /* Scrollable table area */
+  .tbl-scroll { max-height: 480px; overflow-y: auto; }
+  .tbl-scroll::-webkit-scrollbar { width: 4px; }
+  .tbl-scroll::-webkit-scrollbar-track { background: transparent; }
+  .tbl-scroll::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 2px; }
+
+  /* Empty state */
+  .empty-row td { text-align: center; color: #4a5568; padding: 40px !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ AI Attack Detector <span>Dashboard</span></h1>
+  <div style="display:flex;align-items:center;gap:18px">
+    <div class="toggle-wrap">
+      <label class="toggle"><input type="checkbox" id="autoRefresh" checked><span class="slider"></span></label>
+      Auto-refresh
+    </div>
+    <span><span class="status-dot" id="statusDot"></span><span class="status-label" id="statusLabel">Connecting…</span></span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Stat cards -->
+  <div class="cards">
+    <div class="card total"><div class="val" id="cTotal">0</div><div class="lbl">Total Scanned</div></div>
+    <div class="card attacks"><div class="val" id="cAttacks">0</div><div class="lbl">Attacks Detected</div></div>
+    <div class="card clean"><div class="val" id="cClean">0</div><div class="lbl">Clean Requests</div></div>
+    <div class="card rate"><div class="val" id="cRate">0%</div><div class="lbl">Attack Rate</div></div>
+  </div>
+
+  <!-- Attack type counts -->
+  <div class="type-row" id="typeRow"></div>
+
+  <!-- Main content -->
+  <div class="cols">
+
+    <!-- Left: detection log table -->
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Live Detection Log</h2>
+          <button onclick="clearLog()" style="background:none;border:1px solid #2d3748;color:#718096;padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;">Clear</button>
+        </div>
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th style="width:62px">Time</th>
+              <th style="width:52px">Method</th>
+              <th>URL</th>
+              <th style="width:100px">Attack Type</th>
+              <th style="width:110px">Confidence</th>
+            </tr></thead>
+            <tbody id="logBody">
+              <tr class="empty-row"><td colspan="5">No detections yet — start the API server and send requests</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: detail + manual test -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Detail panel -->
+      <div class="panel" id="detailPanel">
+        <div class="panel-head"><h2>Request Detail</h2></div>
+        <div id="detailBody"><div class="detail-empty">Click a row to see details</div></div>
+      </div>
+
+      <!-- Manual test -->
+      <div class="panel">
+        <div class="panel-head"><h2>Manual Test</h2></div>
+        <div class="test-form">
+          <label>URL</label>
+          <input id="tUrl" type="text" placeholder="http://example.com/login?id=1' OR 1=1--" />
+          <label>Params</label>
+          <input id="tParams" type="text" placeholder="id=1' OR 1=1--" />
+          <label>Method</label>
+          <select id="tMethod"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+          <label>Headers (optional)</label>
+          <textarea id="tHeaders" placeholder="Host: example.com&#10;User-Agent: Mozilla/5.0"></textarea>
+          <button class="btn" onclick="runTest()">Analyze Request</button>
+          <div class="test-result" id="testResult"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let refreshTimer = null;
+let allDetections = [];
+
+// ── HTML escape (prevents XSS payloads from executing in dashboard) ─────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── color helpers ────────────────────────────────────────────────────────
+function badgeClass(label) {
+  if (!label) return 'badge-error';
+  const l = label.toLowerCase();
+  if (l.includes('sqli'))      return 'badge-sqli';
+  if (l.includes('xss'))       return 'badge-xss';
+  if (l.includes('cmdi'))      return 'badge-cmdi';
+  if (l.includes('traversal')) return 'badge-traversal';
+  if (l.includes('normal'))    return 'badge-normal';
+  if (l.includes('suspicious'))return 'badge-suspicious';
+  return 'badge-error';
+}
+function confColor(c) {
+  if (c >= 80) return '#fc8181';
+  if (c >= 60) return '#f6ad55';
+  return '#68d391';
+}
+
+// ── health check ─────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(API + '/health');
+    if (r.ok) {
+      document.getElementById('statusDot').style.background = '#48bb78';
+      document.getElementById('statusLabel').textContent = 'API Online';
+    } else { throw new Error(); }
+  } catch {
+    document.getElementById('statusDot').style.background = '#fc8181';
+    document.getElementById('statusLabel').textContent = 'API Offline — run api_server.py';
+  }
+}
+
+// ── fetch & render log ───────────────────────────────────────────────────
+async function fetchLog() {
+  try {
+    const [logRes, statsRes] = await Promise.all([
+      fetch(API + '/log'), fetch(API + '/stats')
+    ]);
+    const logData   = await logRes.json();
+    const statsData = await statsRes.json();
+    allDetections = logData.detections || [];
+    renderStats(statsData);
+    renderLog(allDetections);
+  } catch {}
+}
+
+function renderStats(s) {
+  document.getElementById('cTotal').textContent   = s.total   || 0;
+  document.getElementById('cAttacks').textContent = s.malicious || 0;
+  document.getElementById('cClean').textContent   = s.clean   || 0;
+  const rate = s.total ? Math.round(100 * s.malicious / s.total) : 0;
+  document.getElementById('cRate').textContent    = rate + '%';
+
+  const row = document.getElementById('typeRow');
+  row.innerHTML = '';
+  const typeClass = { sqli:'pill-sqli', xss:'pill-xss', cmdi:'pill-cmdi',
+                      traversal:'pill-traversal', normal:'pill-normal' };
+  for (const [type, cnt] of Object.entries(s.by_type || {})) {
+    const cl = typeClass[type] || 'pill-suspicious';
+    row.innerHTML += `<span class="pill ${cl}">${type}: ${cnt}</span>`;
+  }
+}
+
+function renderLog(detections) {
+  const body = document.getElementById('logBody');
+  if (!detections.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="5">No detections yet</td></tr>';
+    return;
+  }
+  body.innerHTML = detections.map((d, i) => {
+    const bc = badgeClass(d.label);
+    const cc = confColor(d.confidence);
+    const fill = Math.min(d.confidence, 100);
+    return `<tr onclick="showDetail(${i})" id="row-${i}">
+      <td style="color:#718096;font-size:11px">${esc(d.time)}</td>
+      <td style="font-size:11px;color:#a0aec0">${esc(d.method)}</td>
+      <td class="url-cell" title="${esc(d.url)}">${esc(d.url)}</td>
+      <td><span class="badge ${bc}">${esc(d.label)}</span></td>
+      <td>
+        <div class="conf-wrap">
+          <div class="conf-bar"><div class="conf-fill" style="width:${fill}%;background:${cc}"></div></div>
+          <span class="conf-txt">${d.confidence}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── detail view ──────────────────────────────────────────────────────────
+function showDetail(i) {
+  document.querySelectorAll('.tbl tr').forEach(r => r.classList.remove('selected'));
+  const row = document.getElementById('row-' + i);
+  if (row) row.classList.add('selected');
+
+  const d  = allDetections[i];
+  const bc = badgeClass(d.label);
+  const cc = confColor(d.confidence);
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-content">
+      <div class="detail-verdict" style="background:${cc}18;border:1px solid ${cc}44">
+        <div class="vtype" style="color:${cc}">${esc(d.label.toUpperCase())}</div>
+        <div class="vconf" style="color:${cc}">Confidence: ${d.confidence}% &nbsp;·&nbsp; Stage: ${esc(d.stage)}</div>
+      </div>
+      <div class="detail-row"><div class="key">Time</div><div class="val">${esc(d.time)}</div></div>
+      <div class="detail-row"><div class="key">Method</div><div class="val">${esc(d.method)}</div></div>
+      <div class="detail-row"><div class="key">URL</div><div class="val mono">${esc(d.url)}</div></div>
+      <div class="detail-row"><div class="key">Malicious</div><div class="val">${d.is_malicious ? '!! Yes' : 'No'}</div></div>
+    </div>`;
+}
+
+// ── manual test ──────────────────────────────────────────────────────────
+async function runTest() {
+  const body = {
+    url:     document.getElementById('tUrl').value,
+    params:  document.getElementById('tParams').value,
+    method:  document.getElementById('tMethod').value,
+    headers: document.getElementById('tHeaders').value,
+  };
+  const out = document.getElementById('testResult');
+  out.style.display = 'block';
+  out.textContent = 'Analyzing…';
+  try {
+    const r   = await fetch(API + '/analyze', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const res = await r.json();
+    out.textContent = JSON.stringify(res, null, 2);
+    fetchLog();
+  } catch(e) {
+    out.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ── clear log ────────────────────────────────────────────────────────────
+async function clearLog() {
+  allDetections = [];
+  renderLog([]);
+  renderStats({total:0, malicious:0, clean:0, by_type:{}});
+  document.getElementById('cTotal').textContent = '0';
+  document.getElementById('cAttacks').textContent = '0';
+  document.getElementById('cClean').textContent = '0';
+  document.getElementById('cRate').textContent = '0%';
+  document.getElementById('typeRow').innerHTML = '';
+  document.getElementById('detailBody').innerHTML = '<div class="detail-empty">Click a row to see details</div>';
+}
+
+// ── auto refresh ─────────────────────────────────────────────────────────
+function startRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    checkHealth();
+    fetchLog();
+  }, 2000);
+}
+
+document.getElementById('autoRefresh').addEventListener('change', function() {
+  if (this.checked) startRefresh();
+  else clearInterval(refreshTimer);
+});
+
+// Enter key in test form
+document.getElementById('tUrl').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runTest();
+});
+
+// ── init ─────────────────────────────────────────────────────────────────
+checkHealth();
+fetchLog();
+startRefresh();
+</script>
+</body>
+</html>

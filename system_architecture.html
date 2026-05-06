@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Architecture — Web Attack Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--border:#1e293b;
+  --text:#e2e8f0;--muted:#94a3b8;--accent:#6366f1;
+  --green:#10b981;--amber:#f59e0b;--rose:#f43f5e;--cyan:#22d3ee;
+  --purple:#a78bfa;--blue:#3b82f6;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:auto}
+h1{font-size:1.6rem;font-weight:700;text-align:center;padding:32px 0 4px;background:linear-gradient(135deg,var(--cyan),var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:28px;letter-spacing:.5px}
+
+/* ── canvas ─────────────────────────────────────────── */
+.canvas{display:flex;align-items:stretch;gap:0;padding:20px 40px 40px;min-width:1300px;position:relative}
+
+/* ── tier ───────────────────────────────────────────── */
+.tier{flex:1;display:flex;flex-direction:column;position:relative;min-width:0}
+.tier-label{
+  font-size:.65rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  text-align:center;padding:6px 0;border-radius:8px 8px 0 0;color:#fff;
+}
+.tier-body{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:0 0 12px 12px;
+  padding:18px 14px;display:flex;flex-direction:column;gap:12px;position:relative;
+}
+
+.tier-client .tier-label{background:linear-gradient(90deg,#0ea5e9,#06b6d4)}
+.tier-backend .tier-label{background:linear-gradient(90deg,var(--accent),#7c3aed)}
+.tier-ml .tier-label{background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.tier-quantum .tier-label{background:linear-gradient(90deg,#ec4899,var(--rose))}
+.tier-output .tier-label{background:linear-gradient(90deg,var(--green),#059669)}
+
+/* ── arrow connector between tiers ──────────────────── */
+.connector{
+  display:flex;align-items:center;justify-content:center;flex:0 0 38px;position:relative;
+}
+.connector svg{width:38px;height:60px}
+.connector .arrow-line{stroke:var(--muted);stroke-width:2;stroke-dasharray:6 4}
+.connector .arrow-head{fill:var(--muted)}
+.connector .conn-label{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);
+  font-size:.55rem;color:var(--muted);white-space:nowrap;letter-spacing:.5px;font-weight:500;
+  background:var(--bg);padding:0 4px;
+}
+
+/* ── card ───────────────────────────────────────────── */
+.card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;transition:all .3s ease;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0;
+  opacity:.7;transition:opacity .3s;
+}
+.card:hover{transform:translateY(-2px);border-color:rgba(99,102,241,.4);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.card:hover::before{opacity:1}
+.card-icon{font-size:1.3rem;margin-bottom:6px}
+.card-title{font-size:.78rem;font-weight:600;margin-bottom:4px}
+.card-desc{font-size:.65rem;color:var(--muted);line-height:1.45}
+.card-tech{
+  display:inline-block;margin-top:6px;font-size:.55rem;font-family:'JetBrains Mono',monospace;
+  background:rgba(99,102,241,.15);color:var(--purple);padding:2px 7px;border-radius:4px;
+}
+
+.card.c-blue::before{background:linear-gradient(90deg,#0ea5e9,#06b6d4)}
+.card.c-indigo::before{background:linear-gradient(90deg,var(--accent),#7c3aed)}
+.card.c-purple::before{background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.card.c-pink::before{background:linear-gradient(90deg,#ec4899,var(--rose))}
+.card.c-green::before{background:linear-gradient(90deg,var(--green),#059669)}
+.card.c-amber::before{background:linear-gradient(90deg,var(--amber),#d97706)}
+
+/* ── decision badge ─────────────────────────────────── */
+.decision{
+  display:flex;align-items:center;gap:6px;margin-top:6px;
+  font-size:.6rem;color:var(--amber);font-weight:500;
+}
+.decision .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── legend ─────────────────────────────────────────── */
+.legend{
+  display:flex;justify-content:center;gap:24px;padding:16px;flex-wrap:wrap;
+}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--muted)}
+.legend-swatch{width:10px;height:10px;border-radius:3px}
+
+/* ── responsive ─────────────────────────────────────── */
+@media(max-width:900px){.canvas{flex-direction:column;min-width:unset}.connector{flex:0 0 28px;transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+
+<h1>Hybrid Quantum-Classical Web Attack Detection Framework</h1>
+<p class="subtitle">System Architecture — Left-to-Right Data Flow</p>
+
+<div class="canvas">
+
+  <!-- ═══ TIER 1 : CLIENT ═══ -->
+  <div class="tier tier-client">
+    <div class="tier-label">Layer 1 — Client / Interception</div>
+    <div class="tier-body">
+      <div class="card c-blue">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">Web Browser</div>
+        <div class="card-desc">End-user HTTP/S traffic originating from any browser or automated tool.</div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-icon">🔌</div>
+        <div class="card-title">Burp Suite Proxy</div>
+        <div class="card-desc">Transparent man-in-the-middle proxy intercepting all outbound requests in real time.</div>
+        <span class="card-tech">Java Extension</span>
+      </div>
+      <div class="card c-blue">
+        <div class="card-icon">📡</div>
+        <div class="card-title">Detection Extension</div>
+        <div class="card-desc">Custom Burp plugin extracts URI, headers &amp; body → serialises to JSON → fires async POST to backend.</div>
+        <span class="card-tech">ai_attack_detector.py</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector">
+    <svg viewBox="0 0 38 60"><line class="arrow-line" x1="4" y1="30" x2="30" y2="30"/><polygon class="arrow-head" points="28,24 38,30 28,36"/></svg>
+    <span class="conn-label">HTTP POST /analyze</span>
+  </div>
+
+  <!-- ═══ TIER 2 : BACKEND ═══ -->
+  <div class="tier tier-backend">
+    <div class="tier-label">Layer 2 — Backend Services</div>
+    <div class="tier-body">
+      <div class="card c-indigo">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Flask REST API</div>
+        <div class="card-desc">Receives JSON payloads via <code>/analyze</code> and <code>/analyze_batch</code>. Serves live dashboard on <code>/</code>.</div>
+        <span class="card-tech">api_server.py · Flask</span>
+      </div>
+      <div class="card c-indigo">
+        <div class="card-icon">🔢</div>
+        <div class="card-title">Feature Extractor</div>
+        <div class="card-desc">Maps raw requests into a <strong>30-D feature vector</strong>: URL entropy, keyword counts, encoding metrics, structural anomalies.</div>
+        <span class="card-tech">feature_extractor.py</span>
+      </div>
+      <div class="card c-indigo">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Live Dashboard</div>
+        <div class="card-desc">Real-time detection log, attack type breakdown, and confidence visualisations.</div>
+        <span class="card-tech">dashboard.html</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector">
+    <svg viewBox="0 0 38 60"><line class="arrow-line" x1="4" y1="30" x2="30" y2="30"/><polygon class="arrow-head" points="28,24 38,30 28,36"/></svg>
+    <span class="conn-label">30-D Feature Vector</span>
+  </div>
+
+  <!-- ═══ TIER 3 : CLASSICAL ML ═══ -->
+  <div class="tier tier-ml">
+    <div class="tier-label">Layer 3a — Classical ML Engine</div>
+    <div class="tier-body">
+      <div class="card c-purple">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Anomaly Detector</div>
+        <div class="card-desc">Unsupervised zero-day gate — flags novel patterns that deviate from baseline traffic distribution.</div>
+        <span class="card-tech">Isolation Forest · .pkl</span>
+      </div>
+      <div class="card c-purple">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">Classical Ensemble</div>
+        <div class="card-desc">Supervised classification via <strong>Random Forest + XGBoost + SVM</strong> voting ensemble.</div>
+        <span class="card-tech">classical_ml.py · Scikit-Learn</span>
+      </div>
+      <div class="decision">
+        <span class="dot"></span>
+        Confidence ≥ 85% → Final Verdict
+      </div>
+      <div class="decision">
+        <span class="dot"></span>
+        Confidence &lt; 85% → Escalate to QML →
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector">
+    <svg viewBox="0 0 38 60"><line class="arrow-line" x1="4" y1="30" x2="30" y2="30"/><polygon class="arrow-head" points="28,24 38,30 28,36"/></svg>
+    <span class="conn-label">Low-Confidence Escalation</span>
+  </div>
+
+  <!-- ═══ TIER 4 : QUANTUM ═══ -->
+  <div class="tier tier-quantum">
+    <div class="tier-label">Layer 3b — Quantum Escalation</div>
+    <div class="tier-body">
+      <div class="card c-pink">
+        <div class="card-icon">⚛️</div>
+        <div class="card-title">Variational Quantum Classifier</div>
+        <div class="card-desc">4-qubit parameterised circuit operating in 2⁴ = 16-D Hilbert space. Provides orthogonal decision boundary.</div>
+        <span class="card-tech">quantum_ml.py · PennyLane</span>
+      </div>
+      <div class="card c-pink">
+        <div class="card-icon">⚖️</div>
+        <div class="card-title">Weighted Ensemble Fusion</div>
+        <div class="card-desc">Confidence-weighted average of classical &amp; quantum probability vectors: <code>W = (C_cl·P_cl + C_q·P_q) / (C_cl+C_q)</code></div>
+        <span class="card-tech">detection_engine.py</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="connector">
+    <svg viewBox="0 0 38 60"><line class="arrow-line" x1="4" y1="30" x2="30" y2="30"/><polygon class="arrow-head" points="28,24 38,30 28,36"/></svg>
+    <span class="conn-label">Final Verdict</span>
+  </div>
+
+  <!-- ═══ TIER 5 : OUTPUT ═══ -->
+  <div class="tier tier-output">
+    <div class="tier-label">Output</div>
+    <div class="tier-body">
+      <div class="card c-green">
+        <div class="card-icon">✅</div>
+        <div class="card-title">Classification Result</div>
+        <div class="card-desc">Labels: <strong>Normal</strong>, SQLi, XSS, Path Traversal, CMDi, or Suspicious (zero-day).</div>
+      </div>
+      <div class="card c-green">
+        <div class="card-icon">📈</div>
+        <div class="card-title">Confidence Score</div>
+        <div class="card-desc">0–100% confidence with attribution to the stage that produced the verdict.</div>
+      </div>
+      <div class="card c-amber">
+        <div class="card-icon">🚨</div>
+        <div class="card-title">Alert / Log</div>
+        <div class="card-desc">JSON response returned to Burp extension. Logged in dashboard with timestamp &amp; metadata.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4)"></div>Client / Interception</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(135deg,var(--accent),#7c3aed)"></div>Backend Services</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"></div>Classical ML</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(135deg,#ec4899,var(--rose))"></div>Quantum Escalation</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:linear-gradient(135deg,var(--green),#059669)"></div>Output</div>
+</div>
+
+</body>
+</html>
