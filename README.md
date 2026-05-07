@@ -68,7 +68,7 @@ web_attack_detector/
 │   └── dataset_generator.py        # Synthetic HTTP traffic generator
 │
 ├── utils/
-│   └── feature_extractor.py        # 26-dimension feature extraction
+│   └── feature_extractor.py        # 30-dimension feature extraction
 │
 ├── models/
 │   ├── classical_ml.py             # Anomaly detector + Attack classifier
@@ -173,7 +173,7 @@ The detection pipeline operates in six sequential stages, where each stage refin
 HTTP Request (Burp Suite intercept / API call)
         │
         ▼
-[Stage 1] Feature Extraction (26 numerical features)
+[Stage 1] Feature Extraction (30 numerical features)
   URL decode → tokenize → length, entropy, special chars, keyword counts
         │
         ▼
@@ -213,45 +213,49 @@ HTTP Request (Burp Suite intercept / API call)
 
 ## Feature Engineering
 
-The feature extraction module transforms raw HTTP requests into a **26-dimensional numerical feature vector**, carefully designed to capture attack signatures across multiple dimensions:
+The feature extraction module transforms raw HTTP requests into a **30-dimensional numerical feature vector**, carefully designed to capture attack signatures across multiple dimensions. Features are computed on the **path + query** portion of the URL only (domain-agnostic), making the classifier invariant to the server hostname:
 
 | # | Feature | Description | Range |
 |---|---------|-------------|-------|
-| 1 | `url_len` | URL string length | 0–∞ |
+| 1 | `path_query_len` | Path + query string length (domain-agnostic) | 0–∞ |
 | 2 | `params_len` | Query/body parameter length | 0–∞ |
-| 3 | `full_len` | Combined URL + params + headers length | 0–∞ |
-| 4 | `url_entropy` | Shannon entropy of URL (detects obfuscation) | 0–8 |
+| 3 | `full_len` | Combined text length (path + params + headers) | 0–∞ |
+| 4 | `path_query_entropy` | Shannon entropy of path + query (detects obfuscation) | 0–8 |
 | 5 | `params_entropy` | Shannon entropy of parameters | 0–8 |
-| 6 | `url_special` | Count of `'";<>(){}[]\|&` etc. in URL | 0–∞ |
+| 6 | `path_query_special` | Count of `'";<>(){}[]\|&` etc. in path + query | 0–∞ |
 | 7 | `params_special` | Count of special chars in parameters | 0–∞ |
 | 8 | `single_quotes` | Count of `'` characters | 0–∞ |
 | 9 | `double_quotes` | Count of `"` characters | 0–∞ |
 | 10 | `dashes` | Count of `--` sequences (SQL comments) | 0–∞ |
 | 11 | `equals` | Count of `=` characters | 0–∞ |
 | 12 | `percent` | Count of `%` characters (URL encoding) | 0–∞ |
-| 13 | `sqli_kw` | SQLi keyword hit count (14 keywords) | 0–14 |
-| 14 | `xss_kw` | XSS keyword hit count (10 keywords) | 0–10 |
-| 15 | `cmd_kw` | Command injection keyword hit count (13 keywords) | 0–13 |
-| 16 | `traversal_kw` | Path traversal pattern hit count (6 patterns) | 0–6 |
+| 13 | `sqli_kw` | SQLi keyword hit count (21 keywords) | 0–21 |
+| 14 | `xss_kw` | XSS keyword hit count (19 keywords) | 0–19 |
+| 15 | `cmd_kw` | Command injection keyword hit count (25 keywords) | 0–25 |
+| 16 | `traversal_kw` | Path traversal pattern hit count (12 patterns) | 0–12 |
 | 17 | `enc_quote` | URL-encoded quote `%27` count | 0–∞ |
 | 18 | `enc_lt` | URL-encoded `<` (`%3c`) count | 0–∞ |
 | 19 | `enc_gt` | URL-encoded `>` (`%3e`) count | 0–∞ |
 | 20 | `enc_nl` | URL-encoded newline `%0a` count | 0–∞ |
 | 21 | `is_post` | Binary: POST method = 1, else = 0 | {0, 1} |
-| 22 | `slash_count` | Count of `/` in URL | 0–∞ |
-| 23 | `q_count` | Count of `?` in URL | 0–∞ |
-| 24 | `amp_count` | Count of `&` in URL | 0–∞ |
-| 25 | `ext_len` | File extension length | 0–∞ |
-| 26 | `suspicious_path` | Binary: contains `/admin`, `/config`, `/etc`, `/../` | {0, 1} |
+| 22 | `slash_count` | Count of `/` in path + query | 0–∞ |
+| 23 | `q_count` | Count of `?` in path + query | 0–∞ |
+| 24 | `amp_count` | Count of `&` in path + query | 0–∞ |
+| 25 | `special_char_density` | Special char count / path + query length (normalised) | 0–1 |
+| 26 | `param_special_density` | Param special chars / param length (normalised) | 0–1 |
+| 27 | `keyword_density` | Total keyword hits / total text length × 100 | 0–100 |
+| 28 | `longest_param_value` | Length of the longest individual parameter value | 0–∞ |
+| 29 | `suspicious_path` | Binary: contains `/admin`, `/config`, `/etc`, `/proc`, `/../`, etc. | {0, 1} |
+| 30 | `html_tag_present` | Binary: HTML/script tag detected (`<script`, `<img`, `<svg`, etc.) | {0, 1} |
 
 ### Keyword Dictionaries
 
 | Attack Type | Keywords Monitored |
 |-------------|-------------------|
-| **SQLi** (14) | `select`, `union`, `insert`, `update`, `delete`, `drop`, `or 1=1`, `' or`, `-- `, `/*`, `*/`, `xp_`, `exec`, `cast(` |
-| **XSS** (10) | `<script`, `javascript:`, `onerror`, `onload`, `alert(`, `document.cookie`, `eval(`, `<img`, `<svg`, `onmouseover` |
-| **CMDi** (13) | `;`, `&&`, `\|\|`, `\|`, `` ` ``, `$(`, `wget `, `curl `, `/etc/passwd`, `cat `, `ls `, `whoami`, `nc ` |
-| **Traversal** (6) | `../`, `..\\`, `%2e%2e`, `....//`, `/etc/`, `c:\windows` |
+| **SQLi** (21) | `select`, `union`, `insert`, `update`, `delete`, `drop`, `or 1=1`, `' or`, `-- `, `/*`, `*/`, `xp_`, `exec`, `cast(`, `information_schema`, `@@version`, `sleep(`, `benchmark(`, `having`, `group by`, `order by` |
+| **XSS** (19) | `<script`, `javascript:`, `onerror`, `onload`, `alert(`, `document.cookie`, `eval(`, `<img`, `<svg`, `onmouseover`, `onfocus`, `onclick`, `onmouseout`, `<iframe`, `<body`, `fromcharcode`, `innerhtml`, `<input`, `autofocus` |
+| **CMDi** (25) | `; `, ` ;`, `&&`, `\|\|`, `\| `, ` \|`, `` ` ``, `$(`, `wget `, `curl `, `/etc/passwd`, `cat `, `ls `, `whoami`, `nc `, `ping `, `/bin/sh`, `/bin/bash`, `python `, `perl `, `chmod `, `chown `, `rm `, `nmap `, `netcat` |
+| **Traversal** (12) | `../`, `..\\`, `%2e%2e`, `....//`, `/etc/`, `c:\windows`, `/proc/`, `/var/`, `win.ini`, `%252e`, `..%2f`, `..%5c` |
 
 ---
 
@@ -274,7 +278,7 @@ The training dataset is generated using carefully crafted templates that simulat
 | **Total Samples** | 3,000 |
 | **Samples Per Class** | 600 |
 | **Number of Classes** | 5 |
-| **Feature Dimensions** | 26 |
+| **Feature Dimensions** | 30 |
 | **Train/Test Split** | 80% / 20% (stratified) |
 | **Training Set Size** | 2,400 samples |
 | **Test Set Size** | 600 samples |
